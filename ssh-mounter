@@ -1,40 +1,21 @@
 #!/bin/bash
 
-  # Config selection
-  echo 'Select a config:'
-  echo '1: root@host1:/'
-  echo '2: root@host2:/'
-  read input
-  case $input in
-    1)
-      folder='host1'
-      ssh_string='root@host1:/';;
+# Functions
+has_flag() { echo true; }
 
-    2)
-      folder='host2'
-      ssh_string='root@host2:/';;
-  esac
+# List configuration file fields
+list_config() {
+	# awk script ignores comments and new lines
+	awk '{ if(substr($1, 1, 1) != "#" && substr($1, 1, 1) != '\n') print $1 ": " $2}' /home/$USER/.ssh-mounter.cfg;
+}
 
-  # Function selection
-  echo 'Select a function:'
-  echo '1: mount'
-  echo '2: unmount'
-  echo '3: remount'
-  read input
-  case $input in
-    1)
-      if [ ! -d "/media/$USER/$folder" ]; then
-        # Create mounting folder
-	command="mkdir /media/$USER/$folder;"
-      fi
-      command="$command sshfs -o allow_other $ssh_string /media/$USER/$folder";;
+# Create config file if non existant
+if [ ! -f /home/$USER/.ssh-mounter.cfg ]; then
+ 	echo -e '# SSH-MOUNTER CONFIG -- EDIT USING COMMAND LINE TOOLS\n' > "/home/$USER/.ssh-mounter.cfg"
+fi
 
-    2)
-      command="fusermount -u /media/$USER/$folder";;
-
-    3)
-      command="fusermount -u /media/$USER/$folder;
-      sshfs -o allow_other $ssh_string /media/$USER/$folder";;
-  esac
-
-  eval $command;
+case "$1" in
+	-l)
+		list_config
+		;;
+esac
