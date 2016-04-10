@@ -1,4 +1,6 @@
 #!/bin/bash
+# Global variables
+
 
 # Functions
 has_flag() { echo true; }
@@ -9,6 +11,56 @@ list_config() {
 	awk '{ if(substr($1, 1, 1) != "#" && substr($1, 1, 1) != '\n') print $1 ": " $2}' /home/$USER/.ssh-mounter.cfg;
 }
 
+# Add configuration file to
+add_config() {
+	# Ensure arguments are provided
+	if [[ $1 == '' ]]; then
+		echo "Syntax error: '-a' flag requires at least one argument"
+		return
+	fi;
+
+	# Validate syntax
+	local valid=$(expr "$1" : '[a-z_][a-z0-9_]*@[a-z_][a-z0-9]*')
+	if [[ !($valid != 0) ]]; then
+		echo "Syntax error: Configuration argument must use format 'user@hostname'"
+		return
+	fi
+
+	# Ensure config is unique
+	local config_found=$(awk "{if(\$2 == \"$1\") print 1}" /home/$USER/.ssh-mounter.cfg)
+	if [[ $config_found ]]; then
+		echo 'Runtime error: Configuration supplied already exists'
+		return
+	fi
+
+	# Generate ID
+	local new_id=$(awk 'END{print $1}' /home/$USER/.ssh-mounter.cfg)
+	new_id=$(expr $new_id + 1)
+
+	# Add to config file
+	echo "$new_id $1" >> /home/$USER/.ssh-mounter.cfg
+}
+
+# Return host name of id
+load_config() {
+	# Ensure arguments are provided
+	if [[ $1 == '' ]]; then
+		echo "Syntax error: '-c' flag requires at least one argument"
+		return
+	fi;
+
+	# Get host with id == $1
+	host=$(awk "{ if(\$1 == $1) print \$2}" /home/$USER/.ssh-mounter.cfg)
+
+	# If host not found
+	if [[ $host == '' ]]; then
+		echo "Runtime error: Entry with id '$1' does not exist."
+		return
+	fi
+}
+
+
+
 # Create config file if non existant
 if [ ! -f /home/$USER/.ssh-mounter.cfg ]; then
  	echo -e '# SSH-MOUNTER CONFIG -- EDIT USING COMMAND LINE TOOLS\n' > "/home/$USER/.ssh-mounter.cfg"
@@ -18,4 +70,9 @@ case "$1" in
 	-l)
 		list_config
 		;;
+	-a)
+		add_config $2 $3
+		;;
+	-c)
+		load_config $2
 esac
