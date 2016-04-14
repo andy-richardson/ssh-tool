@@ -57,6 +57,14 @@ load_config() {
 		echo "Runtime error: Entry with id '$1' does not exist."
 		return
 	fi
+
+	# Create directory name
+	IFS='@' read -ra domain <<< "$host"
+	dirname=${domain[1]}
+
+	# Attempt to make directory
+	mkdir /media/$USER/$dirname
+	sshfs -o allow_other $host:/ /media/$USER/$dirname
 }
 
 
