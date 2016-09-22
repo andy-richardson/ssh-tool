@@ -5,6 +5,15 @@
 # Functions
 has_flag() { echo true; }
 
+# Show help
+help() {
+	echo -e "\n  -h,  --help			Display this help\n"
+	echo -e "  -l				List configured connections\n"
+	echo -e "  -a [USER] [HOST]		Append new connection to config\n"
+	echo -e "  -m [NUM]			Mount SSH connection to /media/$USER/[hostname]\n"
+	echo -e "  -m [NUM]			Connect to SSH connection\n"
+}
+
 # List configuration file fields
 list_config() {
 	# awk script ignores comments and new lines
@@ -89,7 +98,10 @@ case "$1" in
 	-m)
 		mount_ssh $2
 		;;
-	-c)	
+	-c)
 		connect_ssh $2
+		;;
+	-h | --help)
+		help
 		;;
 esac
